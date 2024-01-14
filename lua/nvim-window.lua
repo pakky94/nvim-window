@@ -53,6 +53,9 @@ local config = {
 
   -- The border style to use for the floating window.
   border = 'single',
+
+  -- Select other window automatically if there is only one other window
+  quick_select = true,
 }
 
 -- Returns a table that maps the hint keys to their corresponding windows.
@@ -173,16 +176,19 @@ local function get_char()
   return ok and fn.nr2char(char) or nil
 end
 
--- Configures the plugin by merging the given settings into the default ones.
-function M.setup(user_config)
-  config = vim.tbl_extend('force', config, user_config)
-end
-
--- Picks a window to jump to, and makes it the active window.
-function M.pick()
+local function select_target_window()
   local windows = vim.tbl_filter(function(id)
     return api.nvim_win_get_config(id).relative == ''
   end, api.nvim_tabpage_list_wins(0))
+
+  if config.quick_select and #windows == 2 then
+    local c = api.nvim_get_current_win()
+    if c == windows[1] then
+      return windows[2]
+    else
+      return windows[1]
+    end
+  end
 
   local window_keys = window_keys(windows)
   local floats = open_floats(window_keys)
@@ -222,6 +228,18 @@ function M.pick()
   end
 
   close_floats(floats)
+
+  return window
+end
+
+-- Configures the plugin by merging the given settings into the default ones.
+function M.setup(user_config)
+  config = vim.tbl_extend('force', config, user_config)
+end
+
+-- Picks a window to jump to, and makes it the active window.
+function M.pick()
+  local window = select_target_window()
 
   if window then
     api.nvim_set_current_win(window)
