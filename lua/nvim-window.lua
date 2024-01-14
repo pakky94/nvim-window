@@ -55,7 +55,7 @@ local config = {
   border = 'single',
 
   -- Select other window automatically if there is only one other window
-  quick_select = true,
+  quick_select = false,
 }
 
 -- Returns a table that maps the hint keys to their corresponding windows.
